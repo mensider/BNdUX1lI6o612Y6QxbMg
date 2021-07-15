@@ -7,6 +7,7 @@
 # [.] Go Plan Epsilon
 
 import turtle
+import swarm_algo
 
 #Setup the Arena
 arena=turtle.Screen()
@@ -69,7 +70,7 @@ for i in range(1,100):
     bot4_y = bot4_coords[1]
 
     #Now the swarm algorithm must tell how to Move
-    [bot1_dx,bot1_dy, bot2_dx,bot2_dy, bot3_dx,bot3_dy, bot4_dx,bot4_dy] = swarm_algo(bot1_x,bot1_y , bot2_x,bot2_y , bot3_x,bot3_y , bot4_x,bot4_y)
+    [bot1_dx,bot1_dy, bot2_dx,bot2_dy, bot3_dx,bot3_dy, bot4_dx,bot4_dy] = swarm_algo.swarm_algo(bot1_x,bot1_y , bot2_x,bot2_y , bot3_x,bot3_y , bot4_x,bot4_y)
 
     #Move accordingly
     bot1.goto(bot1_x + bot1_dx , bot1_y + bot1_dy)

@@ -6,6 +6,7 @@ Plan Epsilon
 [.] Retrieve the current bot location and destination from server.
 [.] Search for the shortest path from storage.
 [.] Send command next direction of motion.
+
 [+] Easily Scalable in number of bots, for a constant grid.
 [-] Initial path calculation can be exhaustive for a large grid.
 [-] Difficult to scale the grid.
@@ -13,5 +14,5 @@ Plan Epsilon
 Plan Gamma
 ----------
 [.] Retrieve the current bot location and destination from server
-[.] 
+[.]
 [.]
