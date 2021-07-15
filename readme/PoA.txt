@@ -1,6 +1,6 @@
 Plan Epsilon
 ------------
-[.] Label every single location in the grid.
+[.] Label every single location in the grid.  <---
 [.] Calculate the shortest path between any two locations in the grid and store the path.
 [.] Implement an anti-collision check before each poll.
 [.] Retrieve the current bot location and destination from server.
