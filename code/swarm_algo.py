@@ -1,10 +1,18 @@
 #fn signature
 #[bot1_dx,bot1_dy, bot2_dx,bot2_dy, bot3_dx,bot3_dy, bot4_dx,bot4_dy] = swarm_algo(bot1_x,bot1_y , bot2_x,bot2_y , bot3_x,bot3_y , bot4_x,bot4_y)
+
 def swarm_algo(bot1_x,bot1_y , bot2_x,bot2_y , bot3_x,bot3_y , bot4_x,bot4_y):
 
+    #From current coordinates we need to find which node is current
+
+    #Get next node from current node
+
+    #Get coordinates for next node
+
+    #Assign dx values accordingly
 
     bot1_dx = 0
-    bot1_dy = -10
+    bot1_dy = -47.5
     bot2_dx = 0
     bot2_dy = -10
     bot3_dx = 0

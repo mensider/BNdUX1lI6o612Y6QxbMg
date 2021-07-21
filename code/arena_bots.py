@@ -8,6 +8,9 @@
 
 import turtle
 import swarm_algo
+import time
+import grid_graph
+import node_translator
 
 #Setup the Arena
 arena=turtle.Screen()
@@ -22,7 +25,7 @@ bot2 = turtle.Turtle()
 bot3 = turtle.Turtle()
 bot4 = turtle.Turtle()
 #Define bot colors
-bot1.color("white")
+bot1.color("pink")
 bot2.color("green")
 bot3.color("red")
 bot4.color("blue")
@@ -36,6 +39,19 @@ bot1.turtlesize(2.1)
 bot2.turtlesize(2.1)
 bot3.turtlesize(2.1)
 bot4.turtlesize(2.1)
+
+#Get Graph representation of the arena
+arena_graph = grid_graph.grid_graph()
+
+#Define pathways for bots
+bot1_path = ['S1','D1','S1']
+bot2_path = ['S2','D2','S2']
+bot3_path = ['S3','D3','S3']
+bot4_path = ['S4','D4','S4']
+
+#Translate Alphabetical Nodes into coordinates
+node = node_translator.node_translator(x_coord,y_coord)
+
 #Disable path tracing
 bot1.penup()
 bot2.penup()
@@ -77,5 +93,8 @@ for i in range(1,100):
     bot2.goto(bot2_x + bot2_dx , bot2_y + bot2_dy)
     bot3.goto(bot3_x + bot3_dx , bot3_y + bot3_dy)
     bot4.goto(bot4_x + bot4_dx , bot4_y + bot4_dy)
+
+    #Wait for 0.5 seconds
+    time.sleep(0.5)
 
 arena.mainloop()
