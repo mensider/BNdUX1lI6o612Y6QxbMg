@@ -16,9 +16,11 @@ import node_translator
 arena=turtle.Screen()
 arena.bgpic(picname="Arena.png")
 arena.setup(width=1000,height=480)
+'''
 arena_origin_y = 215.5
 arena_origin_x = -72.5
 arena_blocksize = 47.5
+'''
 #Define bot objects
 bot1 = turtle.Turtle()
 bot2 = turtle.Turtle()
@@ -40,17 +42,11 @@ bot2.turtlesize(2.1)
 bot3.turtlesize(2.1)
 bot4.turtlesize(2.1)
 
-#Get Graph representation of the arena
-arena_graph = grid_graph.grid_graph()
-
 #Define pathways for bots
 bot1_path = ['S1','D1','S1']
 bot2_path = ['S2','D2','S2']
 bot3_path = ['S3','D3','S3']
 bot4_path = ['S4','D4','S4']
-
-#Translate Alphabetical Nodes into coordinates
-node = node_translator.node_translator(x_coord,y_coord)
 
 #Disable path tracing
 bot1.penup()
@@ -58,41 +54,74 @@ bot2.penup()
 bot3.penup()
 bot4.penup()
 #Move bots to starting points
-bot1.goto(arena_origin_x,arena_origin_y)
-bot2.goto(arena_origin_x+arena_blocksize,arena_origin_y)
-bot3.goto(arena_origin_x+(2*arena_blocksize),arena_origin_y)
-bot4.goto(arena_origin_x+(3*arena_blocksize),arena_origin_y)
+bot1.goto(node_translator.node_to_coord(bot1_path[0]))
+bot2.goto(node_translator.node_to_coord(bot2_path[0]))
+bot3.goto(node_translator.node_to_coord(bot3_path[0]))
+bot4.goto(node_translator.node_to_coord(bot4_path[0]))
+
 #Enable path tracing
 bot1.pendown()
 bot2.pendown()
 bot3.pendown()
 bot4.pendown()
 
-for i in range(1,100):
+#Track the locations where the bot have already been
+bot1_path_index = 1
+bot2_path_index = 1
+bot3_path_index = 1
+bot4_path_index = 1
+bot1_target = bot1_path[bot1_path_index]
+bot2_target = bot1_path[bot2_path_index]
+bot3_target = bot1_path[bot3_path_index]
+bot4_target = bot1_path[bot4_path_index]
+
+while True:
     #Get current position of bots
     #This section simulates what the video processing must do
     bot1_coords = bot1.position()
-    bot1_x = bot1_coords[0]
-    bot1_y = bot1_coords[1]
-    print(bot1_x,bot1_y)
     bot2_coords = bot2.position()
-    bot2_x = bot2_coords[0]
-    bot2_y = bot2_coords[1]
     bot3_coords = bot3.position()
-    bot3_x = bot3_coords[0]
-    bot3_y = bot3_coords[1]
     bot4_coords = bot4.position()
-    bot4_x = bot4_coords[0]
-    bot4_y = bot4_coords[1]
+
+    #now find what nodes they are at
+    bot1_currentnode = node_translator.coord_to_node(bot1_coords)
+    bot2_currentnode = node_translator.coord_to_node(bot2_coords)
+    bot3_currentnode = node_translator.coord_to_node(bot3_coords)
+    bot4_currentnode = node_translator.coord_to_node(bot4_coords)
+
+    #Now find where they should go
+    if bot1_currentnode == bot1_path[bot1_path_index]:
+        #Bot has arrived at one check point
+        ''' Include here, any specific actions at the checkpoint '''
+        bot1_path_index = bot1_path_index + 1
+        bot1_target = bot1_path[bot1_path_index]
+    if bot2_currentnode == bot2_path[bot2_path_index]:
+        #Bot has arrived at one check point
+        ''' Include here, any specific actions at the checkpoint '''
+        bot2_path_index = bot2_path_index + 1
+        bot2_target = bot2_path[bot2_path_index]
+    if bot3_currentnode == bot3_path[bot3_path_index]:
+        #Bot has arrived at one check point
+        ''' Include here, any specific actions at the checkpoint '''
+        bot3_path_index = bot3_path_index + 1
+        bot3_target = bot3_path[bot3_path_index]
+    if bot4_currentnode == bot4_path[bot4_path_index]:
+        #Bot has arrived at one check point
+        ''' Include here, any specific actions at the checkpoint '''
+        bot4_path_index = bot4_path_index + 1
+        bot4_target = bot4_path[bot1_path_index]
 
     #Now the swarm algorithm must tell how to Move
-    [bot1_dx,bot1_dy, bot2_dx,bot2_dy, bot3_dx,bot3_dy, bot4_dx,bot4_dy] = swarm_algo.swarm_algo(bot1_x,bot1_y , bot2_x,bot2_y , bot3_x,bot3_y , bot4_x,bot4_y)
+    [bot1_nextnode,bot2_nextnode,bot3_nextnode,bot4_nextnode] = swarm_algo.swarm_algo(bot1_currentnode,bot1_target,
+                                                                                    bot2_currentnode,bot2_target,
+                                                                                    bot3_currentnode,bot3_target,
+                                                                                    bot4_currentnode,bot4_target)
 
     #Move accordingly
-    bot1.goto(bot1_x + bot1_dx , bot1_y + bot1_dy)
-    bot2.goto(bot2_x + bot2_dx , bot2_y + bot2_dy)
-    bot3.goto(bot3_x + bot3_dx , bot3_y + bot3_dy)
-    bot4.goto(bot4_x + bot4_dx , bot4_y + bot4_dy)
+    bot1.goto(node_translator.node_to_coord(bot1_nextnode))
+    bot2.goto(node_translator.node_to_coord(bot2_nextnode))
+    bot3.goto(node_translator.node_to_coord(bot3_nextnode))
+    bot4.goto(node_translator.node_to_coord(bot4_nextnode))
 
     #Wait for 0.5 seconds
     time.sleep(0.5)
