@@ -18,6 +18,12 @@ def swarm_algo(bot1_currentnode,bot1_target,bot2_currentnode,bot2_target,bot3_cu
     if len(bot4_path) == 1:
         hold(bot4_path)
 
+    '''
+    Collision check
+    1) Bots get into same node
+    2) Bots cross head into each other
+    '''
+    
     return (bot1_path[1],bot2_path[1],bot3_path[1],bot4_path[1])
 
 

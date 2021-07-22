@@ -142,6 +142,6 @@ while True:
     bot4.goto(node_translator.node_to_coord(bot4_nextnode))
 
     #Wait for 0.1 seconds
-    time.sleep(0.1)
+    #time.sleep(0.1)
 
 arena.mainloop()
