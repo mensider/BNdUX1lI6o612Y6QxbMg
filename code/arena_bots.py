@@ -3,7 +3,6 @@
 # [.] Use an image of the arean as background
 # [.] Define 4 rect blocks, each for a bot
 # [.] Assume a precursor fn which will provide coordinates of each bot
-
 # [.] Go Plan Epsilon
 
 import turtle
@@ -43,6 +42,8 @@ bot3.turtlesize(2.1)
 bot4.turtlesize(2.1)
 
 #Define pathways for bots
+''' Simply change here for a new path'''
+
 bot1_path = ['S1','D1','S1']
 bot2_path = ['S2','D2','S2']
 bot3_path = ['S3','D3','S3']
@@ -71,13 +72,13 @@ bot2_path_index = 1
 bot3_path_index = 1
 bot4_path_index = 1
 bot1_target = bot1_path[bot1_path_index]
-bot2_target = bot1_path[bot2_path_index]
-bot3_target = bot1_path[bot3_path_index]
-bot4_target = bot1_path[bot4_path_index]
+bot2_target = bot2_path[bot2_path_index]
+bot3_target = bot3_path[bot3_path_index]
+bot4_target = bot4_path[bot4_path_index]
 
 while True:
     #Get current position of bots
-    #This section simulates what the video processing must do
+    '''This section simulates what the video processing must do'''
     bot1_coords = bot1.position()
     bot2_coords = bot2.position()
     bot3_coords = bot3.position()
@@ -94,22 +95,38 @@ while True:
         #Bot has arrived at one check point
         ''' Include here, any specific actions at the checkpoint '''
         bot1_path_index = bot1_path_index + 1
-        bot1_target = bot1_path[bot1_path_index]
+        try:
+            bot1_target = bot1_path[bot1_path_index]
+        except IndexError:
+            bot1_path_index = bot1_path_index - 1
+            print("Bot 1 has already reached final destination")
     if bot2_currentnode == bot2_path[bot2_path_index]:
         #Bot has arrived at one check point
         ''' Include here, any specific actions at the checkpoint '''
         bot2_path_index = bot2_path_index + 1
-        bot2_target = bot2_path[bot2_path_index]
+        try:
+            bot2_target = bot2_path[bot2_path_index]
+        except IndexError:
+            bot2_path_index = bot2_path_index - 1
+            print("Bot 2 has already reached final destination")
     if bot3_currentnode == bot3_path[bot3_path_index]:
         #Bot has arrived at one check point
         ''' Include here, any specific actions at the checkpoint '''
         bot3_path_index = bot3_path_index + 1
-        bot3_target = bot3_path[bot3_path_index]
+        try:
+            bot3_target = bot3_path[bot3_path_index]
+        except IndexError:
+            bot3_path_index = bot3_path_index - 1
+            print("Bot 3 has already reached final destination")
     if bot4_currentnode == bot4_path[bot4_path_index]:
         #Bot has arrived at one check point
         ''' Include here, any specific actions at the checkpoint '''
         bot4_path_index = bot4_path_index + 1
-        bot4_target = bot4_path[bot1_path_index]
+        try:
+            bot4_target = bot4_path[bot4_path_index]
+        except IndexError:
+            bot4_path_index = bot4_path_index - 1
+            print("Bot 4 has already reached final destination")
 
     #Now the swarm algorithm must tell how to Move
     [bot1_nextnode,bot2_nextnode,bot3_nextnode,bot4_nextnode] = swarm_algo.swarm_algo(bot1_currentnode,bot1_target,
@@ -118,12 +135,13 @@ while True:
                                                                                     bot4_currentnode,bot4_target)
 
     #Move accordingly
+    '''This is where the bots are instructed via WiFi'''
     bot1.goto(node_translator.node_to_coord(bot1_nextnode))
     bot2.goto(node_translator.node_to_coord(bot2_nextnode))
     bot3.goto(node_translator.node_to_coord(bot3_nextnode))
     bot4.goto(node_translator.node_to_coord(bot4_nextnode))
 
-    #Wait for 0.5 seconds
-    time.sleep(0.5)
+    #Wait for 0.1 seconds
+    time.sleep(0.1)
 
 arena.mainloop()

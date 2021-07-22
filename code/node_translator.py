@@ -31,8 +31,7 @@ lookup_table = {'D1':(-405,-164.5),'D2':(-405,-212),'D3':(402.5,-212),'D4':(402.
 
 #The translator should approximate the location
 #The coordinates won't always match the set value, so may be run an MSE to find best match
-def coord_to_node(x_coord,y_coord) :
-    bot_coords = (x_coord,y_coord)
+def coord_to_node(bot_coords) :
     MSE = 1000 #an arbitrary value that is very high
     for node_current,coords in lookup_table.items():
         MSE_current = (((bot_coords[0] - coords [0])*(bot_coords[0] - coords [0])) + ((bot_coords[1] - coords [1])*(bot_coords[1] - coords [1])))/2
