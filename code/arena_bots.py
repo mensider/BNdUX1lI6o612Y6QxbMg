@@ -36,18 +36,19 @@ bot2.shape("square")
 bot3.shape("square")
 bot4.shape("square")
 #Define bot size
-bot1.turtlesize(2.1)
-bot2.turtlesize(2.1)
-bot3.turtlesize(2.1)
-bot4.turtlesize(2.1)
+sz = 2.1 #2.1
+bot1.turtlesize(sz)
+bot2.turtlesize(sz)
+bot3.turtlesize(sz)
+bot4.turtlesize(sz)
 
 #Define pathways for bots
 ''' Simply change here for a new path'''
 
-bot1_path = ['S1','D1','S1']
-bot2_path = ['S2','D2','S2']
-bot3_path = ['S3','D3','S3']
-bot4_path = ['S4','D4','S4']
+bot1_path = ['S1','D1','D3','S1']
+bot2_path = ['S2','D2','D4','S2']
+bot3_path = ['S3','D3','D1','S3']
+bot4_path = ['S4','D4','D2','S4']
 
 #Disable path tracing
 bot1.penup()
@@ -76,6 +77,7 @@ bot2_target = bot2_path[bot2_path_index]
 bot3_target = bot3_path[bot3_path_index]
 bot4_target = bot4_path[bot4_path_index]
 
+quickness = 0
 while True:
     #Get current position of bots
     '''This section simulates what the video processing must do'''
@@ -140,7 +142,8 @@ while True:
     bot2.goto(node_translator.node_to_coord(bot2_nextnode))
     bot3.goto(node_translator.node_to_coord(bot3_nextnode))
     bot4.goto(node_translator.node_to_coord(bot4_nextnode))
-
+    quickness = quickness + 1
+    print("Time Elapsed: " + str(quickness))
     #Wait for 0.1 seconds
     #time.sleep(0.1)
 
