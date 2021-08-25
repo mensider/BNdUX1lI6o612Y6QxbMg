@@ -45,10 +45,10 @@ bot4.turtlesize(sz)
 #Define pathways for bots
 ''' Simply change here for a new path'''
 
-bot1_path = ['S1','D1','D3','S1']
-bot2_path = ['S2','D2','D4','S2']
-bot3_path = ['S3','D3','D1','S3']
-bot4_path = ['S4','D4','D2','S4']
+bot1_path = ['S1','D1','S1']
+bot2_path = ['S2','D2','S2']
+bot3_path = ['S3','D3','S3']
+bot4_path = ['S4','D4','S4']
 
 #Disable path tracing
 bot1.penup()
