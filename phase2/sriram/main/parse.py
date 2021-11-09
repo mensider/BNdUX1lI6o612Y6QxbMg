@@ -15,5 +15,5 @@ def parseCsv(fileloc):
     return df
 
 # Fill in the absolute path within quotes here
-myVal =parseCsv('/home/sts/Desktop/swarm/main/data/sampleData.csv')
-myVal
+myVal =parseCsv('./data/sampleData.csv')
+print(myVal)
