@@ -1,144 +1,30 @@
-### There are 4 bots. Two induct zones. 'Z5' and 'Z10' are induct zones.
-### Instruction Pipeline: Image Processing -> Swarm -> WiFi command center -> Bots
-### Image Processing gives real time coordinates of 4 bots.
-### Swarm gives instantaneous directions for 4 bots.
-### Excel file gives the destination for 2 bots in the induct zones.
-### Bot tray one direction only.
+""" # There are 4 bots. Two induct zones. 'Z5' and 'Z10' are induct zones.
+    # Instruction Pipeline: Image Processing -> Swarm -> WiFi command center -> Bots
+    # Image Processing gives real time coordinates of 4 bots.
+    # Swarm gives instantaneous directions for 4 bots.
+    # Excel file gives the destination for 2 bots in the induct zones.
+    # Bot tray one direction only. """
 
 import networkx as nx
-import matplotlib.pyplot as plt     #only needed for plotting the graph
+import matplotlib.pyplot as plt     # only needed for plotting the graph
 
 ''' To proceed, define the network(done), nodes(done), and direction of motion bw nodes. '''
 ''' How to relate edges with the movement direction ???'''
 ''' How to ensure the bot stays within the cell, and turns at the exact moment ???'''
 
-#Get network
-grid = grid_graph()
 #Dictionaries
 destination_dict = {0:"NotDefined",1:"Mumbai",2:"Delhi",3:"Kolkata",4:"Chennai",5:"Bengaluru",6:"Hyderabad",7:"Pune",8:"Ahemdabad",9:"Jaipur"}
 movement_dict = {0:"NotDefined",1:"GoForward",2:"TurnLeftGoForward",3:"TurnRightGoForward",4:"Turn180GoForward"}
+orientation_dict={0:"NotDefined",1:"North",2:"East",3:"West",4:"South"}
 #Read destination list
 dstfile = open('dst.txt', 'r')
 pkg_dsts = [line for line in dstfile.readlines()]
-pkg_num = 0 #pkg_dsts[pkg_num] gives the destination for next package
+pkg_num = 0  #pkg_dsts[pkg_num] gives the destination for next package
 
-class bot:
-    package_loaded = False
-    destination_city = 0
-    destination_node = "NotDefined"
-    current_location = "NotDefined"
-    movement = 0
-
-    def __init__(self, name):
-        self.name = name
-
-    def get_destination(self, city):
-        self.destination_city = city
-        pass
-
-    def get_current(self):
-        #self.current_location = pipe from img Processing
-        pass
-
-    def print_status(self):
-        print("Name: ", self.name)
-        print("Destination: ", destination_dict[self.destination])
-        print("Location: ", self.current_location)
-        print("Instruction: ", movement_dict[self.movement])
-        print("---------------------------------------------------")
-
-bot1 = bot('RED')
-bot2 = bot('BLUE')
-bot3 = bot('YELLOW')
-bot4 = bot('GREEN')
-bot1.print_status()
-bot2.print_status()
-bot3.print_status()
-bot4.print_status()
-
-while True: #Runs indefinitely
-    #Get current location of all bots
-    bot1.get_current()
-    bot2.get_current()
-    bot3.get_current()
-    bot4.get_current()
-
-    #Check if any bot not loaded
-    if(bot1.package_loaded == False):
-        if(bot1.current_location == 'Z5' or bot1.current_location == 'Z10'):    #Check in induct zone
-            bot1.get_destination(get_key(pkg_dsts[pkg_num],destination_dict))
-            bot1.destination_node = destination_calculator (bot1)
-            bot1.package_loaded = True
-            pkg_num = pkg_num + 1
-    if(bot2.package_loaded == False):
-        if(bot2.current_location == 'Z5' or bot2.current_location == 'Z10'):    #Check in induct zone
-            bot2.get_destination(get_key(pkg_dsts[pkg_num],destination_dict))
-            bot2.destination_node = destination_calculator (bot2)
-            bot2.package_loaded = True
-            pkg_num = pkg_num + 1
-    if(bot3.package_loaded == False):
-        if(bot3.current_location == 'Z5' or bot3.current_location == 'Z10'):    #Check in induct zone
-            bot3.get_destination(get_key(pkg_dsts[pkg_num],destination_dict))
-            bot3.destination_node = destination_calculator (bot3)
-            bot3.package_loaded = True
-            pkg_num = pkg_num + 1
-    if(bot4.package_loaded == False):
-        if(bot4.current_location == 'Z5' or bot4.current_location == 'Z10'):    #Check in induct zone
-            bot4.get_destination(get_key(pkg_dsts[pkg_num],destination_dict))
-            bot4.destination_node = destination_calculator (bot4)
-            bot4.package_loaded = True
-            pkg_num = pkg_num + 1
-
-    #Check if bot reached its destination
-    if(bot1.current_location == bot1.destination_node):
-        wifi_command(flip_bot1)                     #deliver package
-        bot1.package_loaded = False
-        if(bot1.destination_city in [1,2,3,5,6]):   #choose the nearest induct zone to return
-            bot1.destination_node = 'Z5'
-        else:
-            bot1.destination_node = 'Z10'
-    if(bot2.current_location == bot2.destination_node):
-        wifi_command(flip_bot2)                     #deliver package
-        bot2.package_loaded = False
-        if(bot2.destination_city in [1,2,3,5,6]):   #choose the nearest induct zone to return
-            bot2.destination_node = 'Z5'
-        else:
-            bot2.destination_node = 'Z10'
-    if(bot3.current_location == bot3.destination_node):
-        wifi_command(flip_bot1)                     #deliver package
-        bot3.package_loaded = False
-        if(bot3.destination_city in [1,2,3,5,6]):   #choose the nearest induct zone to return
-            bot3.destination_node = 'Z5'
-        else:
-            bot3.destination_node = 'Z10'
-    if(bot4.current_location == bot4.destination_node):
-        wifi_command(flip_bot1)                     #deliver package
-        bot4.package_loaded = False
-        if(bot4.destination_city in [1,2,3,5,6]):   #choose the nearest induct zone to return
-            bot4.destination_node = 'Z5'
-        else:
-            bot4.destination_node = 'Z10'
-
-    #Pass the locations to swarm algorithm
-    [bot1.movement,bot2.movement,bot3.movement,bot4.movement] =\
-    swarm_algorithm(grid,bot1.current_location,bot1.destination_node,\
-    bot2.current_location,bot2.destination_node,bot3.current_location,\
-    bot3.destination_node,bot4.current_location,bot4.destination_node)
-
-    #Pass instructions to Wifi command center
-    wifi_command(bot1.movement,bot2.movement,bot3.movement,bot4.movement)
-
-    #Finally print status
-    bot1.print_status()
-    bot2.print_status()
-    bot3.print_status()
-    bot4.print_status()
-
-print("[--] Exited Main Loop [--]")
-
-#destination_dict = {0:"NotDefined",1:"Mumbai",2:"Delhi",3:"Kolkata",4:"Chennai",5:"Bengaluru",6:"Hyderabad",7:"Pune",
-#8:"Ahemdabad",9:"Jaipur"}, Just for Reference
-def destination_calculator(botx):   #now we use predefined dictionary mapping, later we can add dynamic destinations
+def destination_calculator(botx):
+    # now we use predefined dictionary mapping, later we can add dynamic destinations
+    # destination_dict = {0:"NotDefined",1:"Mumbai",2:"Delhi",3:"Kolkata",4:"Chennai",5:"Bengaluru",6:"Hyderabad",\
+    # 7:"Pune", 8:"Ahemdabad",9:"Jaipur"}, Just for Reference
     destination_map_1 = {1:'B4',2:'F4',3:'J4',4:'B7',5:'F7',6:'J7',7:'C10',8:'G10',9:'K10'}  #from induct zone 'Z5'
     destination_map_2 = {1:'C5',2:'G5',3:'K5',4:'B8',5:'F8',6:'J8',7:'B11',8:'F11',9:'J11'}  #from induct zone 'Z10'
     if botx.current_location == 'Z5':
@@ -146,15 +32,162 @@ def destination_calculator(botx):   #now we use predefined dictionary mapping, l
     if botx.current_location == 'Z10':
         return destination_map_2[botx.destination_city]
 
-def swarm_algorithm(grid,b1_curr,b1_dst,b2_curr,b2_dst,b3_curr,b3_dst,b4_curr,b4_dst):
-    bot1_path = nx.bidirectional_shortest_path(grid, bot1_currentnode, bot1_target)
-    bot2_path = nx.bidirectional_shortest_path(grid, bot2_currentnode, bot2_target)
-    bot3_path = nx.bidirectional_shortest_path(grid, bot3_currentnode, bot3_target)
-    bot4_path = nx.bidirectional_shortest_path(grid, bot4_currentnode, bot4_target)
+def movement_direction(bx_curr,bx_next_node,bx_facing):
+    bx_mov = 0
+    bx_orientation = bx_facing
+    # from induct zone
+    if(bx_curr == 'Z5' or bx_curr == 'Z10'):
+        bx_mov = 1
+        bx_orientation = 2
+        return bx_mov,bx_orientation
 
-    ''' To proceed, define direction of motion bw nodes. '''
+    # split nodes to row and column
+    bx_curr_column = ord(bx_curr[0])
+    bx_curr_row = int(bx_curr[1:])
+    bx_next_node_column = ord(bx_next_node[0])
+    bx_next_node_row = int(bx_next_node[1:])
 
-    return [b1_mov,b2_mov,b3_mov,b4_mov]
+    # if facing east
+    if(bx_facing == 2):
+        # if moving along the column
+        if(bx_curr_column == bx_next_node_column):
+            # if moving one row up
+            if(bx_curr_row > bx_next_node_row):
+                bx_mov = 2
+                bx_orientation = 1
+                return bx_mov, bx_orientation
+            # if moving one row down
+            if (bx_curr_row < bx_next_node_row):
+                bx_mov = 3
+                bx_orientation = 4
+                return bx_mov, bx_orientation
+        # if moving along the row
+        if(bx_curr_row == bx_next_node_row):
+            # if moving one column right
+            if(bx_curr_column < bx_next_node_column):
+                bx_mov = 1
+                bx_orientation = 2
+                return bx_mov, bx_orientation
+            # if moving one column left
+            if(bx_curr_column > bx_next_node_column):
+                bx_mov = 4
+                bx_orientation = 3
+                return bx_mov, bx_orientation
+
+    # if facing west
+    if (bx_facing == 3):
+        # if moving along the column
+        if (bx_curr_column == bx_next_node_column):
+            # if moving one row up
+            if (bx_curr_row > bx_next_node_row):
+                bx_mov = 3
+                bx_orientation = 1
+                return bx_mov, bx_orientation
+            # if moving one row down
+            if (bx_curr_row < bx_next_node_row):
+                bx_mov = 2
+                bx_orientation = 4
+                return bx_mov, bx_orientation
+        # if moving along the row
+        if (bx_curr_row == bx_next_node_row):
+            # if moving one column right
+            if (bx_curr_column < bx_next_node_column):
+                bx_mov = 4
+                bx_orientation = 2
+                return bx_mov, bx_orientation
+            # if moving one column left
+            if (bx_curr_column > bx_next_node_column):
+                bx_mov = 1
+                bx_orientation = 3
+                return bx_mov, bx_orientation
+
+    # if facing north
+    if (bx_facing == 1):
+        # if moving along the column
+        if (bx_curr_column == bx_next_node_column):
+            # if moving one row up
+            if (bx_curr_row > bx_next_node_row):
+                bx_mov = 1
+                bx_orientation = 1
+                return bx_mov, bx_orientation
+            # if moving one row down
+            if (bx_curr_row < bx_next_node_row):
+                bx_mov = 4
+                bx_orientation = 4
+                return bx_mov, bx_orientation
+        # if moving along the row
+        if (bx_curr_row == bx_next_node_row):
+            # if moving one column right
+            if (bx_curr_column < bx_next_node_column):
+                bx_mov = 3
+                bx_orientation = 2
+                return bx_mov, bx_orientation
+            # if moving one column left
+            if (bx_curr_column > bx_next_node_column):
+                bx_mov = 2
+                bx_orientation = 3
+                return bx_mov, bx_orientation
+
+    # if facing south
+    if (bx_facing == 4):
+        # if moving along the column
+        if (bx_curr_column == bx_next_node_column):
+            # if moving one row up
+            if (bx_curr_row > bx_next_node_row):
+                bx_mov = 4
+                bx_orientation = 1
+                return bx_mov, bx_orientation
+            # if moving one row down
+            if (bx_curr_row < bx_next_node_row):
+                bx_mov = 1
+                bx_orientation = 4
+                return bx_mov, bx_orientation
+        # if moving along the row
+        if (bx_curr_row == bx_next_node_row):
+            # if moving one column right
+            if (bx_curr_column < bx_next_node_column):
+                bx_mov = 2
+                bx_orientation = 2
+                return bx_mov, bx_orientation
+            # if moving one column left
+            if (bx_curr_column > bx_next_node_column):
+                bx_mov = 3
+                bx_orientation = 3
+                return bx_mov, bx_orientation
+    return 0,0
+
+def swarm_algorithm(grid,b1,b2,b3,b4):
+    b1_curr = b1.current_location
+    b1_dst = b1.destination_node
+    b1_facing = b1.orientation
+    b2_curr = b2.current_location
+    b2_dst = b2.destination_node
+    b2_facing = b2.orientation
+    b3_curr = b3.current_location
+    b3_dst = b3.destination_node
+    b3_facing = b3.orientation
+    b4_curr = b4.current_location
+    b4_dst = b4.destination_node
+    b4_facing = b4.orientation
+    # call networkx function to find shortest path
+    bot1_path = nx.bidirectional_shortest_path(grid, b1_curr, b1_dst)
+    bot2_path = nx.bidirectional_shortest_path(grid, b2_curr, b2_dst)
+    bot3_path = nx.bidirectional_shortest_path(grid, b3_curr, b3_dst)
+    bot4_path = nx.bidirectional_shortest_path(grid, b4_curr, b4_dst)
+    # TODO : additional collision detection to be implemented
+
+    #find immediate next node
+    b1_next_node = bot1_path[1]
+    b2_next_node = bot2_path[1]
+    b3_next_node = bot3_path[1]
+    b4_next_node = bot4_path[1]
+
+    #calculate movement direction
+    b1_mov,b1_orien = movement_direction(b1_curr,b1_next_node,b1_facing)
+    b2_mov,b2_orien = movement_direction(b2_curr, b2_next_node,b2_facing)
+    b3_mov,b3_orien = movement_direction(b3_curr, b3_next_node,b3_facing)
+    b4_mov,b4_orien = movement_direction(b4_curr, b4_next_node,b4_facing)
+    return [b1_mov,b1_orien,b2_mov,b2_orien,b3_mov,b3_orien,b4_mov,b4_orien]
 
 def visualise_network():
     #Show visually
@@ -248,3 +281,120 @@ def get_key(val,dictionary):
     for key, value in dictionary.items():
          if val == value:
              return key
+
+#Get network
+grid = grid_graph()
+
+class bot:
+    package_loaded = False
+    destination_city = 0
+    destination_node = "NotDefined"
+    current_location = "NotDefined"
+    movement = 0
+    orientation = 0
+    def __init__(self, name):
+        self.name = name
+
+    def get_destination(self, city):
+        self.destination_city = city
+        pass
+
+    def get_current(self, location):
+        self.current_location = location
+        pass
+
+    def print_status(self):
+        print("Name: ", self.name)
+        print("Destination: ", destination_dict[self.destination_city])
+        print("Location: ", self.current_location)
+        print("Orientation: ",orientation_dict[self.orientation])
+        print("Instruction: ", movement_dict[self.movement])
+        print("---------------------------------------------------")
+
+bot1 = bot('RED')
+bot2 = bot('BLUE')
+bot3 = bot('YELLOW')
+bot4 = bot('GREEN')
+bot1.print_status()
+bot2.print_status()
+bot3.print_status()
+bot4.print_status()
+
+while True: #Runs indefinitely
+    #Get current location of all bots
+    # TODO : arena file to simulate arena and Img Proc
+    bot1.get_current(location)
+    bot2.get_current(location)
+    bot3.get_current(location)
+    bot4.get_current(location)
+
+    #Check if any bot not loaded
+    if(bot1.package_loaded == False):
+        if(bot1.current_location == 'Z5' or bot1.current_location == 'Z10'):    #Check in induct zone
+            bot1.get_destination(get_key(pkg_dsts[pkg_num],destination_dict))
+            bot1.destination_node = destination_calculator (bot1)
+            bot1.package_loaded = True
+            pkg_num = pkg_num + 1
+    if(bot2.package_loaded == False):
+        if(bot2.current_location == 'Z5' or bot2.current_location == 'Z10'):    #Check in induct zone
+            bot2.get_destination(get_key(pkg_dsts[pkg_num],destination_dict))
+            bot2.destination_node = destination_calculator (bot2)
+            bot2.package_loaded = True
+            pkg_num = pkg_num + 1
+    if(bot3.package_loaded == False):
+        if(bot3.current_location == 'Z5' or bot3.current_location == 'Z10'):    #Check in induct zone
+            bot3.get_destination(get_key(pkg_dsts[pkg_num],destination_dict))
+            bot3.destination_node = destination_calculator (bot3)
+            bot3.package_loaded = True
+            pkg_num = pkg_num + 1
+    if(bot4.package_loaded == False):
+        if(bot4.current_location == 'Z5' or bot4.current_location == 'Z10'):    #Check in induct zone
+            bot4.get_destination(get_key(pkg_dsts[pkg_num],destination_dict))
+            bot4.destination_node = destination_calculator (bot4)
+            bot4.package_loaded = True
+            pkg_num = pkg_num + 1
+
+    #Check if bot reached its destination
+    if(bot1.current_location == bot1.destination_node):
+        ## wifi_command(flip_bot1)                     #deliver package
+        bot1.package_loaded = False
+        if(bot1.destination_city in [1,2,3,5,6]):   #choose the nearest induct zone to return
+            bot1.destination_node = 'Z5'
+        else:
+            bot1.destination_node = 'Z10'
+    if(bot2.current_location == bot2.destination_node):
+        ## wifi_command(flip_bot2)                     #deliver package
+        bot2.package_loaded = False
+        if(bot2.destination_city in [1,2,3,5,6]):   #choose the nearest induct zone to return
+            bot2.destination_node = 'Z5'
+        else:
+            bot2.destination_node = 'Z10'
+    if(bot3.current_location == bot3.destination_node):
+        ## wifi_command(flip_bot1)                     #deliver package
+        bot3.package_loaded = False
+        if(bot3.destination_city in [1,2,3,5,6]):   #choose the nearest induct zone to return
+            bot3.destination_node = 'Z5'
+        else:
+            bot3.destination_node = 'Z10'
+    if(bot4.current_location == bot4.destination_node):
+        ## wifi_command(flip_bot1)                     #deliver package
+        bot4.package_loaded = False
+        if(bot4.destination_city in [1,2,3,5,6]):   #choose the nearest induct zone to return
+            bot4.destination_node = 'Z5'
+        else:
+            bot4.destination_node = 'Z10'
+
+    #Pass the locations to swarm algorithm
+    [bot1.movement,bot1.orientation,bot2.movement,bot2.orientation,bot3.movement,bot3.orientation,\
+     bot4.movement,bot4.orientation]=swarm_algorithm(grid,bot1,bot2,bot3,bot4)
+    #Pass instructions to Wifi command center
+    # TODO : arena file can be a placeholder for wifi command
+    ## wifi_command(bot1.movement,bot2.movement,bot3.movement,bot4.movement)
+
+    #Finally print status
+    bot1.print_status()
+    bot2.print_status()
+    bot3.print_status()
+    bot4.print_status()
+
+print("[--] Exited Main Loop [--]")

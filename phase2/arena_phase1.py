@@ -1,8 +1,7 @@
-'''
+"""
 This is from phase 1. Must re do line by line. For each completed line, do a # at the end.
-
 Before coming into this, finish main.py.
-'''
+"""
 
 import turtle
 import swarm_algo
