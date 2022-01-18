@@ -806,5 +806,5 @@ while True: #Runs indefinitely
         #bot4_T.pendown()
         bot2_T.pendown()
         first_time = False
-    #time.sleep(1)
+    #time.sleep(0.5)
 print("[--] Exited Main Loop [--]")

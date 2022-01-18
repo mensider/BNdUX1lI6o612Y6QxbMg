@@ -78,17 +78,28 @@ void goAhead(){
       digitalWrite(IN_3, LOW);
       digitalWrite(IN_4, HIGH);
       analogWrite(ENB, speedCar);
+      delay(1500);
+
   }
 
-void goBack(){ 
-      Serial.println("Go Back code activated");
+void goBack(){
+//       Serial.println("Go Back code activated");
+//       digitalWrite(IN_1, HIGH);
+//       digitalWrite(IN_2, LOW);
+//       analogWrite(ENA, speedCar);
+//
+//       digitalWrite(IN_3, HIGH);
+//       digitalWrite(IN_4, LOW);
+//       analogWrite(ENB, speedCar);
+
       digitalWrite(IN_1, HIGH);
       digitalWrite(IN_2, LOW);
       analogWrite(ENA, speedCar);
 
-      digitalWrite(IN_3, HIGH);
-      digitalWrite(IN_4, LOW);
+      digitalWrite(IN_3, LOW);
+      digitalWrite(IN_4, HIGH);
       analogWrite(ENB, speedCar);
+      delay(2000);
   }
 
 void goRight(){ 
@@ -100,6 +111,7 @@ void goRight(){
       digitalWrite(IN_3, LOW);
       digitalWrite(IN_4, HIGH);
       analogWrite(ENB, speedCar);
+      delay(1000);
   }
 
 void goLeft(){
@@ -111,6 +123,7 @@ void goLeft(){
       digitalWrite(IN_3, HIGH);
       digitalWrite(IN_4, LOW);
       analogWrite(ENB, speedCar);
+      delay(1000);
   }
 
 void goAheadRight(){
@@ -228,7 +241,6 @@ void loop()
         else if (command == "9") speedCar = 1023;
         else if (command == "S") stopRobot();
         command = "e";
-        delay(500);
         stopRobot();
         client.write("OK");
       }

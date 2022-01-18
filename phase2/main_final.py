@@ -1,14 +1,16 @@
-""" # There are 4 bots. Two induct zones. 'Z5' and 'Z10' are induct zones.
-    # Instruction Pipeline: Image Processing -> Swarm -> WiFi command center -> Bots
-    # Image Processing gives real time coordinates of 4 bots.
-    # Swarm gives instantaneous directions for 4 bots.
-    # Excel file gives the destination for 2 bots in the induct zones.
-    # Bot tray one direction only. """
-
 import networkx as nx
 import pandas as pd
 import socket
 import time
+import numpy as np
+import cv2
+
+port1 = 5000
+bot1_ip = '192.168.43.242'
+port2 = 5000
+bot2_ip = '192.168.43.220'
+port3 = 5000
+bot3_ip = '192.168.43.24'
 
 def parseCsv(fileloc):
     # Reading the csv file
@@ -26,16 +28,16 @@ def parseCsv(fileloc):
         i = i+1
 
     return (induct_st_1,induct_st_2)
-
+#Read destination list
 (induct_st_1,induct_st_2) = parseCsv('./Sample_Data_latest.xlsx')
 #print(induct_st_1['key'][index])
-
+print("[+] Destination list acquired !")
 #Dictionaries
 destination_dict = {0:"NotDefined",1:"Mumbai",2:"Delhi",3:"Kolkata",4:"Chennai",5:"Bengaluru",6:"Hyderabad",\
                     7:"Pune",8:"Ahemdabad",9:"Jaipur"}
 movement_dict = {0:"NotDefined",1:"GoForward",2:"TurnLeftGoForward",3:"TurnRightGoForward",4:"Turn180GoForward"}
+ino_file_dict = {0:'S', 1:'F', 2:'L', 3:'R', 4:'B'}
 orientation_dict={0:"NotDefined",1:"North",2:"East",3:"West",4:"South"}
-#Read destination list
 
 pkg_num_in_1 = 0  #packages['Destination'][pkg_num] gives the destination for next package
 pkg_num_in_2 = 0
@@ -233,35 +235,62 @@ def swarm_algorithm(grid,b1,b2,b3):
         bot3_cross2 = True
 
     if (bot1_cross1 is True):  # if bot 1 is going into cross 1
-        if (bot2_cross1 is True):
+        if (bot2_cross1 is True):  # if bot 2 is also going into cross 1
             print("1 and 2 : Type 0")
-            bot2_path.insert(0, bot2_path[0])  # hold the bot
-            print("B2 : ", bot2_path)
+            if (bot1_path[0] in cross_1):  # if bot 1 is already in cross 1
+                bot2_path.insert(0, bot2_path[0])  # hold the bot
+                print("B2 : ", bot2_path)
+            else:
+                bot1_path.insert(0, bot1_path[0])  # hold the bot
+                print("B1 : ", bot1_path)
+
         if (bot3_cross1 is True):
             print("1 and 3 : Type 0")
-            bot3_path.insert(0, bot3_path[0])  # hold the bot
-            print("B3 : ", bot3_path)
+            if (bot1_path[0] in cross_1):  # if bot 1 is already in cross 1
+                bot3_path.insert(0, bot3_path[0])  # hold the bot
+                print("B3 : ", bot3_path)
+            else:
+                bot1_path.insert(0, bot1_path[0])  # hold the bot
+                print("B1 : ", bot1_path)
+
     if (bot1_cross2 is True):  # if bot 1 is going into cross 2
         if (bot2_cross2 is True):
             print("1 and 2 : Type 0")
-            bot2_path.insert(0, bot2_path[0])  # hold the bot
-            print("B2 : ", bot2_path)
+            if (bot1_path[0] in cross_2):  # if bot 1 is already in cross 2
+                bot2_path.insert(0, bot2_path[0])  # hold the bot
+                print("B2 : ", bot2_path)
+            else:
+                bot1_path.insert(0, bot1_path[0])  # hold the bot
+                print("B1 : ", bot1_path)
+
         if (bot3_cross2 is True):
             print("1 and 3 : Type 0")
-            bot3_path.insert(0, bot3_path[0])  # hold the bot
-            print("B3 : ", bot3_path)
+            if (bot1_path[0] in cross_2):  # if bot 1 is already in cross 2
+                bot3_path.insert(0, bot3_path[0])  # hold the bot
+                print("B3 : ", bot3_path)
+            else:
+                bot1_path.insert(0, bot1_path[0])  # hold the bot
+                print("B1 : ", bot1_path)
 
     if (bot2_cross1 is True):  # if bot 2 is going into cross 1
         if (bot3_cross1 is True):
             print("2 and 3 : Type 0")
-            bot3_path.insert(0, bot3_path[0])  # hold the bot
-            print("B3 : ", bot3_path)
+            if (bot2_path[0] in cross_1):  # if bot 2 is already in cross 1
+                bot3_path.insert(0, bot3_path[0])  # hold the bot
+                print("B3 : ", bot3_path)
+            else:
+                bot2_path.insert(0, bot2_path[0])  # hold the bot
+                print("B2 : ", bot2_path)
+
     if (bot2_cross2 is True):  # if bot 2 is going to cross 2
         if (bot3_cross2 is True):
             print("2 and 3 : Type 0")
-            bot3_path.insert(0, bot3_path[0])  # hold the bot
-            print("B3 : ", bot3_path)
-
+            if (bot2_path[0] in cross_2):  # if bot 2 is already in cross 2
+                bot3_path.insert(0, bot3_path[0])  # hold the bot
+                print("B3 : ", bot3_path)
+            else:
+                bot2_path.insert(0, bot2_path[0])  # hold the bot
+                print("B2 : ", bot2_path)
 
     ''' 1) Bots get into same nod '''
     if (bot1_path[1] == bot2_path[1]):
@@ -451,21 +480,14 @@ def get_key(val,dictionary):
          if val == value:
              return key
 
-def wireless_command(ip,data):
-    port = 5000
-    ipAddress = '192.168.43.220'
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((ipAddress, port))
-    while True:
-        data = input("Enter Command: ")
-        if (data == 'X'):
-            break
+def commandToBot(botNumber, s, data):
+    try:
         dataBytes = data.encode('utf-8')
         s.send(dataBytes)
         time.sleep(0.000005)
         print(s.recv(1024).decode())
-
-    s.close()
+    except:
+        print(f"Bot {botNumber} Error in transmission")
 
 #Get network
 grid = grid_graph()
@@ -503,12 +525,338 @@ bot1.print_status()
 bot2.print_status()
 bot3.print_status()
 
+webcam = cv2.VideoCapture("http://192.168.43.1:8080/video")
+print("[+] Webcam active !")
+try:
+    s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s1.connect((bot1_ip, port1))
+except:
+    print("Bot 1 unavailable")
+
+try:
+    s2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s2.connect((bot2_ip, port2))
+except:
+    print("Bot 2 unavailable")
+
+try:
+    s3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s3.connect((bot3_ip, port3))
+except:
+    print("Bot 3 unavailable")
+
+print("[+] Connection established with bots !")
+
 while True: #Runs indefinitely
     #Get current location of all bots
-    # TODO : connect with IP code
-    bot1.get_current(location)
-    bot2.get_current(location)
-    bot3.get_current(location)
+    # Reading the video from the
+    # webcam in image frames
+    _, imageFrame = webcam.read()
+
+    # Convert the imageFrame in
+    # BGR(RGB color space) to
+    # HSV(hue-saturation-value)
+    # color space
+    hsvFrame = cv2.cvtColor(imageFrame, cv2.COLOR_BGR2HSV)
+
+    # Set range for red color and
+    # define mask
+    red_lower = np.array([136, 87, 111], np.uint8)
+    red_upper = np.array([180, 255, 255], np.uint8)
+    red_mask = cv2.inRange(hsvFrame, red_lower, red_upper)
+
+    # Set range for green color and
+    # # define mask
+    # green_lower = np.array([65, 60, 60], np.uint8)
+    # green_upper = np.array([80, 255, 255], np.uint8)
+    green_lower = np.array([50, 80, 111], np.uint8)
+    green_upper = np.array([90, 255, 255], np.uint8)
+    green_mask = cv2.inRange(hsvFrame, green_lower, green_upper)
+
+    # Set range for blue color and
+    # define mask
+    blue_lower = np.array([90, 80, 111], np.uint8)
+    blue_upper = np.array([130, 255, 255], np.uint8)
+    blue_mask = cv2.inRange(hsvFrame, blue_lower, blue_upper)
+
+    # Morphological Transform, Dilation
+    # for each color and bitwise_and operator
+    # between imageFrame and mask determines
+    # to detect only that particular color
+    kernal = np.ones((5, 5), "uint8")
+
+    # For red color
+    red_mask = cv2.dilate(red_mask, kernal)
+    res_red = cv2.bitwise_and(imageFrame, imageFrame,
+                              mask=red_mask)
+
+    # For green color
+    green_mask = cv2.dilate(green_mask, kernal)
+    res_green = cv2.bitwise_and(imageFrame, imageFrame,
+                                mask=green_mask)
+
+    # For blue color
+    blue_mask = cv2.dilate(blue_mask, kernal)
+    res_blue = cv2.bitwise_and(imageFrame, imageFrame,
+                               mask=blue_mask)
+
+    # Creating contour to track red color
+    contours, hierarchy = cv2.findContours(red_mask,
+                                           cv2.RETR_TREE,
+                                           cv2.CHAIN_APPROX_SIMPLE)
+    errorx = 50;
+    errory = 150;
+    for pic, contour in enumerate(contours):
+        area = cv2.contourArea(contour)
+        Bluerow = 0;
+        Bluecol = 0;
+        Redcol = 0;
+        Redrow = 0;
+        Greencol = 0;
+        Greenrow = 0;
+        if (area > 300):
+            x, y, w, h = cv2.boundingRect(contour)
+            imageFrame = cv2.rectangle(imageFrame, (x, y),
+                                       (x + w, y + h),
+                                       (0, 0, 255), 2)
+
+            cv2.putText(imageFrame, 'RedBot x=' + str(x) + 'y=' + str(y), (x, y),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.0,
+                        (0, 0, 255))
+            bot1x = x + errorx;
+            bot1y = y + errory;
+            print(bot1x, bot1y);
+            if (bot1x < 86):
+                Redcol = '1';
+            elif (bot1x < 138):
+                Redcol = '2';
+            elif (bot1x < 160):
+                Redcol = '3';
+            elif (bot1x < 241):
+                Redcol = '4';
+            elif (bot1x < 298):
+                Redcol = '5';
+            elif (bot1x < 351):
+                Redcol = '6';
+            elif (bot1x < 407):
+                Redcol = '7';
+            elif (bot1x < 462):
+                Redcol = '8';
+            elif (bot1x < 515):
+                Redcol = '9';
+            elif (bot1x < 572):
+                Redcol = '10';
+            elif (bot1x < 627):
+                Redcol = '11';
+            elif (bot1x < 684):
+                Redcol = '12';
+            elif (bot1x < 743):
+                Redcol = '13';
+            elif (bot1x < 798):
+                Redcol = '14';
+
+            if (bot1y > 697):
+                Redrow = 'A';
+            elif (bot1y > 651):
+                Redrow = 'B';
+            elif (bot1y > 597):
+                Redrow = 'C';
+            elif (bot1y > 545):
+                Redrow = 'D';
+            elif (bot1y > 492):
+                Redrow = 'E';
+            elif (bot1y > 435):
+                Redrow = 'F';
+            elif (bot1y > 381):
+                Redrow = 'G';
+            elif (bot1y > 397):
+                Redrow = 'H';
+            elif (bot1y > 270):
+                Redrow = 'I';
+            elif (bot1y > 214):
+                Redrow = 'J';
+            elif (bot1y > 157):
+                Redrow = 'K';
+            elif (bot1y > 101):
+                Redrow = 'L';
+            elif (bot1y > 45):
+                Redrow = 'M';
+            elif (bot1y > 9):
+                Redrow = 'N';
+            print('Red bot in row,col');
+            red_bot_pos = Redrow+Redcol;
+            print(red_bot_pos);
+
+    # Creating contour to track green color
+    contours, hierarchy = cv2.findContours(green_mask,
+                                           cv2.RETR_TREE,
+                                           cv2.CHAIN_APPROX_SIMPLE)
+
+    for pic, contour in enumerate(contours):
+        area = cv2.contourArea(contour)
+        if (area > 300):
+            x1, y1, wg, hg = cv2.boundingRect(contour)
+            imageFrame = cv2.rectangle(imageFrame, (x1, y1),
+                                       (x1 + wg, y1 + hg),
+                                       (0, 255, 0), 2)
+            cv2.putText(imageFrame, 'GreenBot x=' + str(x1) + 'y=' + str(y1), (x1, y1),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1.0, (0, 255, 0))
+
+            bot2x = x1;
+            bot2y = y1;
+
+            if (bot2x < 86):
+                Greencol = '1';
+            elif (bot2x < 138):
+                Greencol = '2';
+            elif (bot2x < 193):
+                Greencol = '3';
+            elif (bot2x < 241):
+                Greencol = '4';
+            elif (bot2x < 298):
+                Greencol = '5';
+            elif (bot2x < 351):
+                Greencol = '6';
+            elif (bot2x < 407):
+                Greencol = '7';
+            elif (bot2x < 462):
+                Greencol = '8';
+            elif (bot2x < 515):
+                Greencol = '9';
+            elif (bot2x < 572):
+                Greencol = '10';
+            elif (bot2x < 627):
+                Greencol = '11';
+            elif (bot2x < 684):
+                Greencol = '12';
+            elif (bot2x < 743):
+                Greencol = '13';
+            elif (bot2x < 798):
+                Greencol = '14';
+
+            if (bot2y > 697):
+                Greenrow = 'A';
+            elif (bot2y > 651):
+                Greenrow = 'B';
+            elif (bot2y > 597):
+                Greenrow = 'C';
+            elif (bot2y > 545):
+                Greenrow = 'D';
+            elif (bot2y > 492):
+                Greenrow = 'E';
+            elif (bot2y > 435):
+                Greenrow = 'F';
+            elif (bot2y > 381):
+                Greenrow = 'G';
+            elif (bot2y > 397):
+                Greenrow = 'H';
+            elif (bot2y > 270):
+                Greenrow = 'I';
+            elif (bot2y > 214):
+                Greenrow = 'J';
+            elif (bot2y > 157):
+                Greenrow = 'K';
+            elif (bot2y > 101):
+                Greenrow = 'L';
+            elif (bot2y > 45):
+                Greenrow = 'M';
+            elif (bot2y > 9):
+                Greenrow = 'N';
+            print('Green bot in row,col');
+            Green_bot_pos = Greenrow+Greencol;
+            print(Green_bot_pos);
+
+    # Creating contour to track blue color
+    contours, hierarchy = cv2.findContours(blue_mask,
+                                           cv2.RETR_TREE,
+                                           cv2.CHAIN_APPROX_SIMPLE)
+    for pic, contour in enumerate(contours):
+        area = cv2.contourArea(contour)
+        if (area > 300):
+            xb, yb, wb, hb = cv2.boundingRect(contour)
+            imageFrame = cv2.rectangle(imageFrame, (xb, yb),
+                                       (xb + wb, yb + hb),
+                                       (255, 0, 0), 2)
+
+            cv2.putText(imageFrame, 'BlueBot x=' + str(xb) + 'y=' + str(yb), (xb, yb),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1.0, (255, 0, 0))
+
+            bot3x = xb;
+            bot3y = yb;
+
+            if (bot3x < 86):
+                Bluecol = '1';
+            elif (bot3x < 138):
+                Bluecol = '2';
+            elif (bot3x < 193):
+                Bluecol = '3';
+            elif (bot3x < 241):
+                Bluecol = '4';
+            elif (bot3x < 298):
+                Bluecol = '5';
+            elif (bot3x < 351):
+                Bluecol = '6';
+            elif (bot3x < 407):
+                Bluecol = '7';
+            elif (bot3x < 462):
+                Bluecol = '8';
+            elif (bot3x < 515):
+                Bluecol = '9';
+            elif (bot3x < 572):
+                Bluecol = '10';
+            elif (bot3x < 627):
+                Bluecol = '11';
+            elif (bot3x < 684):
+                Bluecol = '12';
+            elif (bot3x < 743):
+                Bluecol = '13';
+            elif (bot3x < 798):
+                Bluecol = '14';
+
+            if (bot3y > 697):
+                Bluerow = 'A';
+            elif (bot3y > 651):
+                Bluerow = 'B';
+            elif (bot3y > 597):
+                Bluerow = 'C';
+            elif (bot3y > 545):
+                Bluerow = 'D';
+            elif (bot3y > 492):
+                Bluerow = 'E';
+            elif (bot3y > 435):
+                Bluerow = 'F';
+            elif (bot3y > 381):
+                Bluerow = 'G';
+            elif (bot3y > 397):
+                Bluerow = 'H';
+            elif (bot3y > 270):
+                Bluerow = 'I';
+            elif (bot3y > 214):
+                Bluerow = 'J';
+            elif (bot3y > 157):
+                Bluerow = 'K';
+            elif (bot3y > 101):
+                Bluerow = 'L';
+            elif (bot3y > 45):
+                Bluerow = 'M';
+            elif (bot3y > 9):
+                Bluerow = 'N';
+        print('Blue bot in row,col');
+        Blue_bot_pos = Bluerow+Bluecol;
+        print(Blue_bot_pos);
+
+    # Program Termination
+    cv2.imshow("Multiple Color Detection in Real-TIme", imageFrame)
+    if cv2.waitKey(10) & 0xFF == ord('q'):
+        webcam.release()
+        cv2.destroyAllWindows()
+        break
+
+    bot1.get_current(red_bot_pos)
+    bot2.get_current(Green_bot_pos)
+    bot3.get_current(Blue_bot_pos)
 
     #Check if any bot not loaded
     if(bot1.package_loaded == False):
@@ -553,6 +901,9 @@ while True: #Runs indefinitely
     #Check if bot reached its destination
     if(bot1.current_location == bot1.destination_node):
         ## wifi_command(flip_bot1)                     #deliver package
+        t1 = threading.Thread(target=commandToBot, args=(1, s1, 'G'))
+        t1.start()
+
         bot1.package_loaded = False
         if(bot1.destination_city in [1,2,3,5,6]):   #choose the nearest induct zone to return
             bot1.destination_node = 'Z5'
@@ -560,6 +911,9 @@ while True: #Runs indefinitely
             bot1.destination_node = 'Z10'
     if(bot2.current_location == bot2.destination_node):
         ## wifi_command(flip_bot2)                     #deliver package
+        t2 = threading.Thread(target=commandToBot, args=(1, s2, 'G'))
+        t2.start()
+
         bot2.package_loaded = False
         if(bot2.destination_city in [1,2,3,5,6]):   #choose the nearest induct zone to return
             bot2.destination_node = 'Z5'
@@ -567,6 +921,9 @@ while True: #Runs indefinitely
             bot2.destination_node = 'Z10'
     if(bot3.current_location == bot3.destination_node):
         ## wifi_command(flip_bot1)                     #deliver package
+        t3 = threading.Thread(target=commandToBot, args=(1, s3, 'G'))
+        t3.start()
+
         bot3.package_loaded = False
         if(bot3.destination_city in [1,2,3,5,6]):   #choose the nearest induct zone to return
             bot3.destination_node = 'Z5'
@@ -577,9 +934,12 @@ while True: #Runs indefinitely
     [bot1.movement,bot1.orientation,bot2.movement,bot2.orientation,bot3.movement,\
      bot3.orientation]=swarm_algorithm(grid,bot1,bot2,bot3)
     #Pass instructions to Wifi command center
-    wireless_command(bot1_ip, bot1.movement)
-    wireless_command(bot2_ip, bot2.movement)
-    wireless_command(bot3_ip, bot3.movement)
+    t1 = threading.Thread(target=commandToBot, args=(1, s1, ino_file_dict[bot1.movement]))
+    t2 = threading.Thread(target=commandToBot, args=(2, s2, ino_file_dict[bot2.movement]))
+    t3 = threading.Thread(target=commandToBot, args=(3, s3, ino_file_dict[bot3.movement]))
+    t1.start()
+    t2.start()
+    t3.start()
     #TODO: Change the .ino file according to movement_dict
 
     #Finally print status
