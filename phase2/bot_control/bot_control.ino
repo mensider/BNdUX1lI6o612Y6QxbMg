@@ -2,8 +2,8 @@
 #define ENB   12          // Enable/speed motors Left         GPIO12(D6)
 #define IN_1  15          // L298N in1 motors Right           GPIO15(D8)
 #define IN_2  13          // L298N in2 motors Right           GPIO13(D7)
-#define IN_3  16           // L298N in3 motors Left           GPIO2(D4) -> D0 GPIO16
-#define IN_4  4           // L298N in4 motors Left            GPIO0(D3) -> D2 GPIO4
+#define IN_3  2           // L298N in3 motors Left           GPIO2(D4) -> D0 GPIO16
+#define IN_4  0           // L298N in4 motors Left            GPIO0(D3) -> D2 GPIO4
 #define servo_pin 5
 #define parcel_speed 10
 

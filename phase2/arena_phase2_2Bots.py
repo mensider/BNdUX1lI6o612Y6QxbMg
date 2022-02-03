@@ -205,37 +205,30 @@ def movement_direction(bx_curr,bx_next_node,bx_facing):
                 return bx_mov, bx_orientation
     return 0,0
 
-def swarm_algorithm(grid,b1,b2,b3): #,b4):
+def swarm_algorithm(grid,b1,b2): #,b4):
     b1_curr = b1.current_location
     b1_dst = b1.destination_node
     b1_facing = b1.orientation
     b2_curr = b2.current_location
     b2_dst = b2.destination_node
     b2_facing = b2.orientation
-    b3_curr = b3.current_location
-    b3_dst = b3.destination_node
-    b3_facing = b3.orientation
 
     # call networkx function to find shortest path
     bot1_path = nx.bidirectional_shortest_path(grid, b1_curr, b1_dst)
     bot2_path = nx.bidirectional_shortest_path(grid, b2_curr, b2_dst)
-    bot3_path = nx.bidirectional_shortest_path(grid, b3_curr, b3_dst)
 
     # TODO : collision avoidance causing problems near induct zone\
     #       : there is only one entrance to each zone A5 and A10 (big conundrum)
     bot1_cross1 = False
     bot2_cross1 = False
-    bot3_cross1 = False
     bot1_cross2 = False
     bot2_cross2 = False
-    bot3_cross2 = False
     cross_1 = ['Z5', 'A5', 'B5', 'A4', 'A6']
     cross_2 = ['Z10', 'A10', 'B10', 'A9', 'A11']
 
     print("Before CDA")
     print("B1 : ", bot1_path)
     print("B2 : ", bot2_path)
-    print("B3 : ", bot3_path)
     # TODO : Do Deep Runs.. Analyze error codes and remove all possible instance of such errors.
     # Types of collissions:
     # --> Holy cross congestion   (highest priority)
@@ -250,14 +243,10 @@ def swarm_algorithm(grid,b1,b2,b3): #,b4):
         bot1_cross1 = True
     if (bot2_path[1] in cross_1):
         bot2_cross1 = True
-    if (bot3_path[1] in cross_1):
-        bot3_cross1 = True
     if (bot1_path[1] in cross_2):
         bot1_cross2 = True
     if (bot2_path[1] in cross_2):
         bot2_cross2 = True
-    if (bot3_path[1] in cross_2):
-        bot3_cross2 = True
 
     if (bot1_cross1 is True):  # if bot 1 is going into cross 1
         if (bot2_cross1 is True):  # if bot 2 is also going into cross 1
@@ -265,15 +254,6 @@ def swarm_algorithm(grid,b1,b2,b3): #,b4):
             if (bot1_path[0] in cross_1):  # if bot 1 is already in cross 1
                 bot2_path.insert(0, bot2_path[0])  # hold the bot
                 print("B2 : ", bot2_path)
-            else:
-                bot1_path.insert(0, bot1_path[0])  # hold the bot
-                print("B1 : ", bot1_path)
-
-        if (bot3_cross1 is True):
-            print("1 and 3 : Type 0")
-            if (bot1_path[0] in cross_1):  # if bot 1 is already in cross 1
-                bot3_path.insert(0, bot3_path[0])  # hold the bot
-                print("B3 : ", bot3_path)
             else:
                 bot1_path.insert(0, bot1_path[0])  # hold the bot
                 print("B1 : ", bot1_path)
@@ -287,36 +267,6 @@ def swarm_algorithm(grid,b1,b2,b3): #,b4):
             else:
                 bot1_path.insert(0, bot1_path[0])  # hold the bot
                 print("B1 : ", bot1_path)
-
-        if (bot3_cross2 is True):
-            print("1 and 3 : Type 0")
-            if (bot1_path[0] in cross_2):  # if bot 1 is already in cross 2
-                bot3_path.insert(0, bot3_path[0])  # hold the bot
-                print("B3 : ", bot3_path)
-            else:
-                bot1_path.insert(0, bot1_path[0])  # hold the bot
-                print("B1 : ", bot1_path)
-
-    if (bot2_cross1 is True):  # if bot 2 is going into cross 1
-        if (bot3_cross1 is True):
-            print("2 and 3 : Type 0")
-            if (bot2_path[0] in cross_1):  # if bot 2 is already in cross 1
-                bot3_path.insert(0, bot3_path[0])  # hold the bot
-                print("B3 : ", bot3_path)
-            else:
-                bot2_path.insert(0, bot2_path[0])  # hold the bot
-                print("B2 : ", bot2_path)
-
-    if (bot2_cross2 is True):  # if bot 2 is going to cross 2
-        if (bot3_cross2 is True):
-            print("2 and 3 : Type 0")
-            if (bot2_path[0] in cross_2):  # if bot 2 is already in cross 2
-                bot3_path.insert(0, bot3_path[0])  # hold the bot
-                print("B3 : ", bot3_path)
-            else:
-                bot2_path.insert(0, bot2_path[0])  # hold the bot
-                print("B2 : ", bot2_path)
-
 
     ''' 1) Bots get into same nod '''
     if (bot1_path[1] == bot2_path[1]):
@@ -332,33 +282,6 @@ def swarm_algorithm(grid,b1,b2,b3): #,b4):
             # G.remove_node(bot2_path[1])  # By removing the busy node from the graph
             # bot1_path = nx.bidirectional_shortest_path(G, b1_curr, b1_dst)
             # print("B1 : ", bot1_path)
-    if (bot1_path[1] == bot3_path[1]):
-        print("1 and 3 : Type 1")
-        try:
-            G = grid.copy()  # Bot 3 will re-calculate the shortest path
-            G.remove_node(bot1_path[1])  # By removing the busy node from the graph
-            bot3_path = nx.bidirectional_shortest_path(G, b3_curr, b3_dst)
-            print("B3 : ", bot3_path)
-        except:     #if there is not a path possible..
-            print("Error")
-            # G = grid.copy()  # Bot 3 will re-calculate the shortest path
-            # G.remove_node(bot3_path[1])  # By removing the busy node from the graph
-            # bot1_path = nx.bidirectional_shortest_path(G, b1_curr, b1_dst)
-            # print("B1 : ", bot1_path)
-
-    if (bot2_path[1] == bot3_path[1]):
-        print("2 and 3 : Type 1")
-        try:
-            G = grid.copy()  # Bot 3 will re-calculate the shortest path
-            G.remove_node(bot2_path[1])  # By removing the busy node from the graph
-            bot3_path = nx.bidirectional_shortest_path(G, b3_curr, b3_dst)
-            print("B3 : ", bot3_path)
-        except:     #if there is not a path possible..
-            print("Error")
-            # G = grid.copy()  # Bot 3 will re-calculate the shortest path
-            # G.remove_node(bot3_path[1])  # By removing the busy node from the graph
-            # bot2_path = nx.bidirectional_shortest_path(G, b2_curr, b2_dst)
-            # print("B2 : ", bot2_path)
 
     ''' 2) Bots cross head into each other '''
     if (bot1_path[0:2] == bot2_path[1::-1]):
@@ -373,46 +296,19 @@ def swarm_algorithm(grid,b1,b2,b3): #,b4):
             bot1_path.insert(0, bot1_path[0])
             bot2_path.insert(0, bot2_path[0])  # hold the bot
 
-    if (bot1_path[0:2] == bot3_path[1::-1]):
-        print("1 and 3 : Type 2")
-        G = grid.copy()  # Bot 3 will re-calculate the shortest path
-        G.remove_node(bot1_path[0])  # By removing the busy node from the graph
-        try:
-            bot3_path = nx.bidirectional_shortest_path(G, b3_curr, b3_dst)
-            print("B3 : ", bot3_path)
-        except:     #if there is not a path possible..
-            print("Error 107")
-            bot1_path.insert(0, bot1_path[0])
-            bot3_path.insert(0, bot3_path[0])  # hold the bot
-
-    if (bot2_path[0:2] == bot3_path[1::-1]):
-        print("2 and 3 : Type 2")
-        G = grid.copy()  # Bot 3 will re-calculate the shortest path
-        G.remove_node(bot2_path[0])  # By removing the busy node from the graph
-        try:
-            bot3_path = nx.bidirectional_shortest_path(G, b3_curr, b3_dst)
-            print("B3 : ", bot3_path)
-        except:     #if there is not a path possible..
-            print("Error 109")
-            bot2_path.insert(0, bot2_path[0])
-            bot3_path.insert(0, bot3_path[0])  # hold the bot
-
     print("After CDA")
     print("B1 : ", bot1_path)
     print("B2 : ", bot2_path)
-    print("B3 : ", bot3_path)
 
     #find immediate next node
     b1_next_node = bot1_path[1]
     b2_next_node = bot2_path[1]
-    b3_next_node = bot3_path[1]
 
     #calculate movement direction
     b1_mov,b1_orien = movement_direction(b1_curr,b1_next_node,b1_facing)
     b2_mov,b2_orien = movement_direction(b2_curr, b2_next_node,b2_facing)
-    b3_mov,b3_orien = movement_direction(b3_curr, b3_next_node,b3_facing)
 
-    return [b1_mov,b1_orien,b2_mov,b2_orien,b3_mov,b3_orien]
+    return [b1_mov,b1_orien,b2_mov,b2_orien]
 
 def visualise_network():
     #Show visually
@@ -630,12 +526,8 @@ class bot:
 
 bot1 = bot('RED')
 bot2 = bot('BLUE')
-bot3 = bot('BLACK')
-#bot4 = bot('GREEN')
 bot1.print_status()
 bot2.print_status()
-bot3.print_status()
-#bot4.print_status()
 
 '''!!!'''#ARENA CODE STARTS
 arena=turtle.Screen()
@@ -644,52 +536,42 @@ arena.setup(width=900,height=800)
 #Define bot objects
 bot1_T = turtle.Turtle()
 bot2_T = turtle.Turtle()
-bot3_T = turtle.Turtle()
-#bot4_T = turtle.Turtle()
+
 pen = turtle.Turtle()
 pen.penup()
 pen.goto(-100,361)
 #Define bot colors
 bot1_T.color("red")
 bot2_T.color("blue")
-bot3_T.color("green")
-#bot4_T.color("green")
+
 #Define bot shapes
 bot1_T.shape("square")
 bot2_T.shape("square")
-bot3_T.shape("square")
-#bot4_T.shape("square")
+
 #Define bot size
 sz = 2.1 #2.1
 bot1_T.turtlesize(sz)
 bot2_T.turtlesize(sz)
-bot3_T.turtlesize(sz)
-#bot4_T.turtlesize(sz)
+
 #Disable path tracing
 bot1_T.penup()
 bot2_T.penup()
-bot3_T.penup()
-#bot4_T.penup()
+
 #Move 2 bots to induct zone , 2 bots outside
 bot1_T.goto(-400,137)
-bot3_T.goto(-400,-141)
-bot2_T.goto(398, 361)
-#bot4_T.goto(398, 361)
+bot2_T.goto(-400,-141)
+
 #Enable path tracing
 bot1_T.pendown()
-bot3_T.pendown()
+bot2_T.pendown()
 '''!!!'''#ARENA CODE ENDS
-flag_to_put_bots_2and4 = False
 packages_delivered = 0
-first_time = True
 
 while True: #Runs indefinitely
     # Get current position of bots
     '''This section simulates what the video processing must do'''
     bot1.get_current(node_translator(bot1_T.position()))
     bot2.get_current(node_translator(bot2_T.position()))
-    bot3.get_current(node_translator(bot3_T.position()))
-    #bot4.get_current(node_translator(bot4_T.position()))
 
     # Check if any bot not loaded
     if (bot1.package_loaded == False):
@@ -716,19 +598,6 @@ while True: #Runs indefinitely
             bot2.get_destination(get_key(induct_st_2[pkg_num_in_2], destination_dict))
             bot2.destination_node = destination_calculator(bot2)
             bot2.package_loaded = True
-            pkg_num_in_2 = pkg_num_in_2 + 1
-
-    if (bot3.package_loaded == False):
-        if (bot3.current_location == 'Z5'):  # Check in induct zone 1
-            bot3.get_destination(get_key(induct_st_1[pkg_num_in_1], destination_dict))
-            bot3.destination_node = destination_calculator(bot3)
-            bot3.package_loaded = True
-            pkg_num_in_1 = pkg_num_in_1 + 1
-
-        if (bot3.current_location == 'Z10'):  # Check in induct zone 2
-            bot3.get_destination(get_key(induct_st_2[pkg_num_in_2], destination_dict))
-            bot3.destination_node = destination_calculator(bot3)
-            bot3.package_loaded = True
             pkg_num_in_2 = pkg_num_in_2 + 1
 
     #Check if bot reached its destination
@@ -758,30 +627,14 @@ while True: #Runs indefinitely
             bot2.destination_node = 'Z5'
         else:
             bot2.destination_node = 'Z10' '''
-    if(bot3.current_location == bot3.destination_node):
-        drop(bot3_T)                     #deliver package
-        packages_delivered = packages_delivered + 1
-        bot3.package_loaded = False
-        if (random.choice([1, 2]) == 1):  # randomize the induct zone to return
-            bot3.destination_node = 'Z5'
-        else:
-            bot3.destination_node = 'Z10'
 
-        '''if(bot3.destination_city in [1,2,3,5,6]):   #choose the nearest induct zone to return
-            bot3.destination_node = 'Z5'
-        else:
-            bot3.destination_node = 'Z10' '''
     #bot1.print_status()
     #bot2.print_status()
-    #bot3.print_status()
-    #bot4.print_status()
-    if packages_delivered == 1:
-        flag_to_put_bots_2and4 = True
+
     # Pass the locations to swarm algorithm
-    #[bot1.movement,bot1.orientation,bot2.movement,bot2.orientation,bot3.movement,bot3.orientation,\
-    # bot4.movement,bot4.orientation]=swarm_algorithm(grid,bot1,bot2,bot3,bot4)
-    [bot1.movement, bot1.orientation, bot2.movement, bot2.orientation, bot3.movement, bot3.orientation]\
-    = swarm_algorithm(grid, bot1, bot2, bot3)
+
+    [bot1.movement, bot1.orientation, bot2.movement, bot2.orientation]\
+    = swarm_algorithm(grid, bot1, bot2)
     '''
     bot1.print_status()
     bot2.print_status()
@@ -789,26 +642,10 @@ while True: #Runs indefinitely
     '''
     pen.clear()
     pen.write("Packages Delivered : "+str(packages_delivered), font=("Calibri", 20, "bold"))
-    y = input("Press Enter")
-    if y=='x':
-        break
-
-    if (flag_to_put_bots_2and4):
-        #Pass instructions to Wifi command center
-        bot1_T.goto(coord_translator(bot1))
-        bot2_T.goto(coord_translator(bot2))
-        bot3_T.goto(coord_translator(bot3))
-        #bot4_T.goto(coord_translator(bot4))
-    else:
-        bot1_T.goto(coord_translator(bot1))
-        # bot2_T.goto(coord_translator(bot2))
-        bot3_T.goto(coord_translator(bot3))
-        # bot4_T.goto(coord_translator(bot4))
-    if first_time and flag_to_put_bots_2and4:
-        bot2_T.goto(-400, 137)
-        #bot4_T.goto(-400, -141)
-        #bot4_T.pendown()
-        bot2_T.pendown()
-        first_time = False
-    #time.sleep(1)
+    # y = input("Press Enter")
+    # if y=='x':
+    #     break
+    bot1_T.goto(coord_translator(bot1))
+    bot2_T.goto(coord_translator(bot2))
+    time.sleep(1)
 print("[--] Exited Main Loop [--]")
