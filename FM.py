@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[10]:
+# In[53]:
 
 
 """ 
 * Obtaining Audio and RDS from pre-captured SDR IQ recording
-* referred from https://pysdr.org/content/rds.html
+* referred from [1] https://pysdr.org/content/rds.html
+* [2] https://github.com/joeugenio/sdr
 * 
 * Print instrcutions marked with [debug] are purely for testing
 """
@@ -14,11 +15,12 @@
 # Import necessary libraries
 import numpy as np
 from scipy.io import wavfile
-from scipy.signal import resample_poly, firwin, bilinear, lfilter
+from scipy import signal
 import matplotlib.pyplot as plt
+from os import system
 
 
-# In[11]:
+# In[54]:
 
 
 """
@@ -360,38 +362,154 @@ def print_RDS(x,sample_rate,centre_freq):
             #print("unsupported group_type:", group_type)
 
 
-# In[12]:
+# In[55]:
 
 
 """
-* Function to save audio data in monophonic form
+* Function to save mono audio data in the FM Composite signal
 * Inputs - 
 *  x : sequence of iq samples
 *  sample_rate
 *  centre_freq
 """
 def get_mono_audio(x,sample_rate,center_freq):
+    FS = sample_rate    # sample frequency
+    F0 = center_freq   # center frequency
+    MDV = 75e3    # Maximum frequency deviation
+    RC = 75e-6    # time constant for de-emphasis
+    N = 1024      # FFT size (for plotting purposes only)
+    ADF = 6       # audio decimate factor
+    ASR = FS/ADF  # audio sample rate
+
+    AUDIOFILE = 'mono.raw'
+
+    # IQ samples
+    iq_samples = x
+
     # Demodulation
-    x = np.diff(np.unwrap(np.angle(x)))
-    
-    # De-emphasis filter, H(s) = 1/(RC*s + 1), implemented as IIR via bilinear transform
-    bz, az = bilinear(1, [75e-6, 1], fs=sample_rate)
-    x = lfilter(bz, az, x)
-    
+    gain = FS/(2*np.pi*MDV)
+    demod = gain * np.angle(iq_samples[:-1]*iq_samples.conj()[1:])
+
     # decimate filter to get mono audio
-    x = x[::6]
-    sample_rate = sample_rate/6
-    
-    # normalizes volume
-    x /= x.std()
-    
-    # Save to wav file, you can open this in Audacity for example
-    outfile = input("Enter audio output file name: ")
-    wavfile.write(outfile + '.wav', int(sample_rate), x)
-    print("[debug] Audio file saved at " + outfile + '.wav')
+    mono = signal.decimate(demod, ADF, ftype='fir')
+
+    # De-emphasis filter H(s) = 1/(RC*s + 1)
+    b = [1]      # numerator of the analog filter transfer function
+    a = [RC, 1]  # denominator of the analog filter transfer function
+
+    # transform the analog filter (s-domain) into a digital filter (z-domain)
+    # via bilinear transform
+    bz, az = signal.bilinear(b, a, fs=FS)
+
+    # filtering
+    mono_deemp = signal.lfilter(bz, az, mono)
+    # remove DC offset
+    mono_deemp -= mono_deemp.mean()
+
+    # scales to int16 range: -32768 to 32767
+    VF = 0.5   # volume factor 50%
+    mono_pcm = VF * mono_deemp *np.iinfo(np.int16).max
+
+    # plays mono audio on aplay and saves wav file
+    mono_pcm.astype("int16").tofile(AUDIOFILE)
+    system('aplay {} -r{} -f S16_LE -c 1 -t raw'.format(AUDIOFILE, int(ASR)))
+    outfile = input("Enter mono audio output file name: ")
+    wavfile.write(outfile + '.wav', int(ASR), mono_deemp)
+    print("[debug] Mono Audio file saved at " + outfile + '.wav')
 
 
-# In[13]:
+# In[56]:
+
+
+"""
+* Function to save stereo audio data in the FM Composite signal
+* Inputs - 
+*  x : sequence of iq samples
+*  sample_rate
+*  centre_freq
+"""
+def get_stereo_audio(x,sample_rate,center_freq):
+    FS = sample_rate    # sample frequency
+    F0 = center_freq   # center frequency
+    MDV = 75e3    # Maximum frequency deviation
+    RC = 75e-6    # time constant for de-emphasis
+    N = 1024      # FFT size (for plotting purposes only)
+    ADF = 6       # audio decimate factor
+    ASR = FS/ADF  # audio sample rate
+    VF = .5       # volume factor
+
+
+    AUDIOFILE = 'stereo.raw'
+
+    # IQ samples
+    iq_samples = x
+
+    # Demodulation
+    gain = FS/(2 * np.pi * MDV)
+    demod = gain * np.angle(iq_samples[:-1]*iq_samples.conj()[1:])
+
+    # decimate filter to get mono audio
+    mono = signal.decimate(demod, ADF, ftype='fir')
+
+    # bandpass filtering for the 19kHz pilot tone
+    NTAPS = 101                      # number of taps
+    cutoff_pt = [18.9e3, 19.1e3]     # filter cut off
+    b_pt = signal.firwin(NTAPS, cutoff_pt, fs=FS, pass_zero='bandpass')
+    pt = signal.lfilter(b_pt, 1, demod) # get pilot tone
+    pt -= pt.mean()
+    pt *= 10    # Compensation for reduced amplitude in transmission (10%)
+
+    # bandpass filtering for the 38kHz L-R stereo audio
+    cutoff_lr = [22.9e3, 53.1e3]          # filter cut off
+    b_lr = signal.firwin(NTAPS, cutoff_lr, fs=FS, pass_zero='bandpass')
+    fil_lr = signal.lfilter(b_lr, 1, demod)  # get L-R filtered
+
+    # AM coherent demodulation of L-R audio
+    # cos(2x) = 2cos^2(x)-1
+    carrier = 2*(2*pt**2 - 1)
+    demod_lr = fil_lr*carrier # shift by 38kHz
+
+    # decimate filter to get stereo L-R audio 
+    st_lr = signal.decimate(demod_lr, ADF, ftype='fir')
+
+    # De-emphasis filter H(s) = 1/(RC*s + 1)
+    b = [1]      # numerator of the analog filter transfer function
+    a = [RC, 1]  # denominator of the analog filter transfer function
+
+    # transform the analog filter (s-domain) into a digital filter (z-domain)
+    # via bilinear transform
+    bz, az = signal.bilinear(b, a, fs=FS)
+
+    # filtering
+    mono = signal.lfilter(bz, az, mono)
+    st_lr = signal.lfilter(bz, az, st_lr)
+
+    # separate stereo channels
+    st_l = mono + st_lr
+    st_r = mono - st_lr
+
+    # remove DC offset
+    st_l -= st_l.mean()
+    st_r -= st_r.mean()
+
+    # Interleaving L and R channels
+    stereo = np.stack((st_l, st_r)).reshape((-1,), order='F')
+
+    stereo_pcm = stereo * (VF*np.iinfo(np.int16).max / abs(stereo).max())
+    
+    # plays stereo audio on aplay and saves wav file
+    stereo_pcm.astype("int16").tofile(AUDIOFILE)
+    system('aplay {} -r{} -f S16_LE -c 2 -t raw'.format(AUDIOFILE, int(ASR)))
+    
+    
+    stereo = np.vstack((st_l,st_r))
+    stereo = stereo.transpose()
+    outfile = input("Enter stereo audio output file name: ")
+    wavfile.write(outfile + '.wav', int(ASR), stereo)
+    print("[debug] Stereo Audio file saved at " + outfile + '.wav')
+
+
+# In[57]:
 
 
 """
@@ -412,6 +530,9 @@ center_freq = 99.5e6
 # Call RDS decoder
 print_RDS(x,sample_rate,center_freq)
 
-# Call audio decoder
+# Call mono audio decoder
 get_mono_audio(x,sample_rate,center_freq)
+
+# Call stereo audio decoder
+get_stereo_audio(x,sample_rate,center_freq)
 
